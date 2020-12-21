@@ -1,6 +1,7 @@
 package csv.etevip.com;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
@@ -45,30 +46,31 @@ public class Application {
     }
 
     public static Mustache loadBodyJSONTemplate() throws IOException {
-        var body = IOUtils.toString(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream("templates/body.mustache"),
-                StandardCharsets.UTF_8);
-        var factory = new DefaultMustacheFactory();
-        var mustache = factory.compile(new StringReader(body), "json-body");
-        return mustache;
+        return new DefaultMustacheFactory()
+        .compile(new StringReader(getMustache("templates/body.mustache")), "json-body");
     }
 
     public static Iterator<Map<String, Object>> LoadCSV(Path csv) throws IOException {
-        CsvSchema schema = CsvSchema.emptySchema().withHeader();
-
-        CsvMapper csvMapper = new CsvMapper();
-        MappingIterator<Map<String, Object>> orderLines = csvMapper.readerFor(Map.class).with(schema)
+        MappingIterator<Map<String, Object>> orderLines = new CsvMapper()
+                .readerFor(Map.class)
+                .with(CsvSchema
+                     .emptySchema()
+                     .withHeader())
                 .readValues(csv.toFile());
-
         return orderLines;
     }
 
     public static HttpResponse<String> sendPostRequest(String body) throws IOException, InterruptedException {
-
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(SERVER_URL))
-                .header("Content-Type", "application/json").POST(BodyPublishers.ofString(body)).build();
-
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer 7f2a2292-2216-4e1c-bf68-f3df8311a8aa")
+                .POST(BodyPublishers.ofString(body))
+                .build();
         return HTTP_CLIENT.send(request, BodyHandlers.ofString());
+    }
+
+    public static String getMustache(String path) throws IOException {
+        return IOUtils.toString(Thread.currentThread().getContextClassLoader().getResourceAsStream(path),StandardCharsets.UTF_8);
     }
 }
