@@ -36,10 +36,8 @@ public class Application {
 
         while (orders.hasNext()) {
             var writer = mustache.execute(new StringWriter(), orders.next());
-
             System.out.println("try Send json %s \n".formatted(writer));
             var response = sendPostRequest(writer.toString());
-
             System.out.println("return status=%s\n body=%s\n".formatted(response.statusCode(), response.body()) );
             writer.flush();
         }
@@ -53,9 +51,7 @@ public class Application {
     public static Iterator<Map<String, Object>> LoadCSV(Path csv) throws IOException {
         MappingIterator<Map<String, Object>> orderLines = new CsvMapper()
                 .readerFor(Map.class)
-                .with(CsvSchema
-                     .emptySchema()
-                     .withHeader())
+                .with(CsvSchema.emptySchema().withHeader())
                 .readValues(csv.toFile());
         return orderLines;
     }
